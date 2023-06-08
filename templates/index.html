@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Stability Predictor</title>
+    <link rel="icon" href="{{ url_for ('static', filename =
+    "images/06272_Brosch-re_Tragetest_Protector_Forest_2-1_icon_stabilit-t_v2.png") }}" type="image/x-icon" />
+    <link rel="stylesheet" href="{{ url_for ('static',
+    filename = "style.css") }}" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <p><span>Power Stability</span> Predictor</p><img class="logo-im" src="{{ url_for ('static', filename =
+                "images/06272_Brosch-re_Tragetest_Protector_Forest_2-1_icon_stabilit-t_v2.png") }}" alt="">
+            </div>
+        </nav>
+    </header>
+    <div class="overlay">
+        <div class="section1">
+            <div class="first">
+                <div class="about">
+                    <div class="about-cont">
+                        <div class="top">Know what we are <span> about?</span></div>
+                        <div class="btm">
+                            <p>
+                                Introducing our website, a state-of-the-art platform that leverages cutting-edge
+                                machine learning techniques to classify the stability of power systems using an unsupervised method
+                                called clustering. By harnessing the power of data-driven analysis, our platform performs an
+                                in-depth evaluation of system stability without relying on pre-labeled data. Through the utilization
+                                of clustering algorithms, it identifies patterns and groups similar system behaviors together,
+                                providing insights into the stability of your power system. 
+                            </p>
+                            <br>
+                            <p>
+                                With our platform, you can gain a comprehensive understanding of your system's stability status. By analyzing various system
+                                parameters and their interactions, it enables you to make informed decisions to optimize system
+                                performance, reduce risks, and enhance overall stability. Experience the power of unsupervised
+                                machine learning and unlock a new level of system stability classification. Take advantage of our
+                                platform today to revolutionize the way you assess and manage the stability of your power systems.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="stab"><img class="stab-im" src="{{ url_for ('static', filename ="images/pexels-dids-6862189.jpg") }}" alt=""></div>
+            </div>    
+            <div class="Check"><p><a href="#section2">Check the power system stability</a></p></div>
+        </div>
+    </div>
+    <div class="section2" id="section2">
+        <div class="upl">
+            <form id="upload-form">
+                <div class="form-cont"><p>Upload your Power dataset</p></div>
+                <input type="file" name="file">
+                <label for="checkbox">The Power flow values <span>(P-KV)</span> and <span>(Q-KVAR)</span> are selected by default</label>
+                <label for="wind"><input type="checkbox" name="option1" value="option1" id="wind"> Add Wind Data</label>
+                <label for="solar"><input type="checkbox" name="option2" value="option2" id="solar"> Add Solar Data</label>
+                <div class="but"><button type="submit" onclick="enableDownloadLink()">Submit</button></div>
+            </form>
+        </div>
+        <div class="holder">
+            <div id="image-container">
+                {% if image %}
+                    <img src="{{ image }}" alt="Cluster Plot">
+                {% else %}
+                    <p>Image Previewer</p>
+                {% endif %}
+            </div>
+            <div class="downl">
+                <p id="summary">
+                    The Power Stability Predictor utilizes K-means clustering to identify stable and unstable clusters
+                    in the "P" and "Q" data. The cluster chart uses colors to represent the stability categories,
+                    with yellow indicating stability and purple indicating instability. The pie chart complements 
+                    the cluster chart by providing a summary of the distribution of data points across these 
+                    stability categories. Together, these visualizations aid in analyzing power stability patterns 
+                    and assessing the prevalence of stable and unstable power behavior.
+                </p>
+                <a class="filedown" href="{{ url_for ('static', filename ="file.csv") }}" download="Power Stability Predictor Result.csv" disabled>
+                    <p id="csv-file">Download system's data result (CSV format)</p>
+                </a>
+                <p id="piechart">View Pie chart of the system's stability</p>
+                <a id="download-link-1" href="{{ url_for('static', filename="images/plot.png") }}" download="cluster.png." style="display: none;"></a>
+                <a id="download-link-2" href="{{ url_for('static', filename="images/pie.png") }}" download="piechart.png" style="display: none;"></a>
+                <p id="piechartclus" onclick="downloadFiles()">Download Piechart and Cluster of system's stability</p>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p class="foot">@2023 Power Stability Predictor. All rights reserved.</p>
+    </div>
+</body>
+<script src="{{ url_for ('static', filename = "stability.js") }}"></script>
+</html>
