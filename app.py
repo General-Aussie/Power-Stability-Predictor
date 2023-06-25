@@ -6,6 +6,7 @@ import os
 import asyncio
 import concurrent.futures
 import pandas as pd
+import numpy as np
 import matplotlib
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
@@ -40,15 +41,59 @@ def ChartResult(percentages, data):
     plt.close(fig)
     return image_path1, file_path1
 
-async def clusterPQ(csv, option1, option2):
+async def clusterPQ(csv, option1, option2, option3):
     import matplotlib.pyplot as plt
     # Specify the path to your Excel file
     file_path = csv
     # Read the Excel file into a pandas DataFrame
     data = pd.read_excel(file_path)
+
+    # Check for missing values in the "Load data" column
+    missing_indices = data["Load data"].isnull()
+
+    # Generate random values between 3 and 7 with 3 decimal places
+    random_values = np.random.uniform(3, 7, size=np.sum(missing_indices)).round(2)
+
+    # Fill the missing values with the random values
+    data.loc[missing_indices, "Load data"] = random_values
+    print(data)
+    # data_path = 'data_file.xlsx'
+    # data.save(data_path)
     # data = await asyncio.to_thread(pd.read_excel, file_path)
 
-    if (option1 and option2):
+    if (option1 and option2 and option3):
+        p_q_data = data[['P', 'Q', 'Wind data', 'Solar data', 'Load data']]
+        # Standardize the data
+        scaler = StandardScaler()
+        normalized_data = scaler.fit_transform(p_q_data)
+        # Load the K-means model
+        with open('load_wind_solar_kmeans_model.pkl', 'rb') as file:
+            kmeans_loaded = pickle.load(file)
+        kmeans_loaded.fit(normalized_data)
+        # Get the cluster labels
+        cluster_labels = kmeans_loaded.labels_
+
+        # Add cluster labels to the dataframe
+        data['Cluster_PQ'] = cluster_labels
+
+        # Label "0" as Stable and "1" as Unstable in the dataframe
+        data['Stability_PQ'] = data['Cluster_PQ'].apply(
+            lambda x: 'Stable' if x == 0 else 'Unstable')
+        
+        # Count the number of data points in each cluster
+        Stability_counts = data['Stability_PQ'].value_counts()
+        #plot pie chart
+        percentages = Stability_counts / len(data) * 100
+        
+        result_file, result_pie = ChartResult(percentages, data)
+
+        # Visualize the clusters
+        plt.scatter(normalized_data[:, 0], normalized_data[:, 1], c=cluster_labels)
+        plt.xlabel('P')
+        plt.ylabel('Q')
+        plt.title('Clustering Analysis on Columns P and Q with Wind Data, Solar Data and Load data')
+    
+    elif (option1 and option2):
         p_q_data = data[['P', 'Q', 'Wind data', 'Solar data']]
         # Standardize the data
         scaler = StandardScaler()
@@ -145,6 +190,37 @@ async def clusterPQ(csv, option1, option2):
         plt.ylabel('Q')
         plt.title('Clustering Analysis on Columns P and Q with Solar Data')
 
+    elif option3:
+        p_q_data = data[['P', 'Q', 'Load data']]
+        # Standardize the data
+        scaler = StandardScaler()
+        normalized_data = scaler.fit_transform(p_q_data)
+        # Load the K-means model
+        with open('load_kmeans_model.pkl', 'rb') as file:
+            kmeans_loaded = pickle.load(file)
+        kmeans_loaded.fit(normalized_data)
+        # Get the cluster labels
+        cluster_labels = kmeans_loaded.labels_
+
+        # Add cluster labels to the dataframe
+        data['Cluster_PQ'] = cluster_labels
+
+        # Label "0" as Stable and "1" as Unstable in the dataframe
+        data['Stability_PQ'] = data['Cluster_PQ'].apply(
+            lambda x: 'Stable' if x == 0 else 'Unstable')
+        
+        # Count the number of data points in each cluster
+        Stability_counts = data['Stability_PQ'].value_counts()
+        #plot pie chart
+        percentages = Stability_counts / len(data) * 100
+        
+        result_file, result_pie = ChartResult(percentages, data)
+
+        # Visualize the clusters
+        plt.scatter(normalized_data[:, 0], normalized_data[:, 1], c=cluster_labels)
+        plt.xlabel('P')
+        plt.ylabel('Q')
+        plt.title('Clustering Analysis on Columns P and Q with Load Data')
 
     else:
         # Extract columns P and Q
@@ -217,13 +293,14 @@ async def upload():
         file = request.files['file']  # Access the uploaded file
         option1 = request.form.get('option1', False)
         option2 = request.form.get('option2', False)
+        option3 = request.form.get('option3', False)
         if file:
             # Save the uploaded file to a temporary location
             file_path = 'temp_file.xlsx'
             file.save(file_path)
 
             def generate_image():
-                return asyncio.run(clusterPQ(file_path, option1, option2))
+                return asyncio.run(clusterPQ(file_path, option1, option2, option3))
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 loop = asyncio.get_event_loop()
